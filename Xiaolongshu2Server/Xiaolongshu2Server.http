@@ -1,0 +1,6 @@
+@Xiaolongshu2Server_HostAddress = http://localhost:5253
+
+GET {{Xiaolongshu2Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
