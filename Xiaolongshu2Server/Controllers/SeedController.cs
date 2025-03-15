@@ -38,7 +38,9 @@ namespace Xiaolongshu2Server.Controllers
 
             List<WorldCitiesDto> records = csv.GetRecords<WorldCitiesDto>().ToList();
 
-            var promises = records
+            using(var transaction = await context.Database.BeginTransactionAsync())
+            {
+                var promises = records
                 .Where(t => !countriesByName.ContainsKey(t.country))
                 .Select(t => new Country()
                 {
@@ -46,9 +48,15 @@ namespace Xiaolongshu2Server.Controllers
                     Iso2 = t.iso2,
                     Iso3 = t.iso3
                 })
+                .DistinctBy(c => c.Name)
                 .Select(t => context.Countries.AddAsync(t).AsTask());
 
-            Task.WaitAll(promises.ToArray());
+                Task.WaitAll(promises.ToArray());
+
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+
 
             //foreach (WorldCitiesDto record in records)
             //{
@@ -66,8 +74,6 @@ namespace Xiaolongshu2Server.Controllers
             //    await context.Countries.AddAsync(country);
             //    countriesByName.Add(record.country, country);
             //}
-
-            await context.SaveChangesAsync();
 
             return new JsonResult(countriesByName.Count);
         }

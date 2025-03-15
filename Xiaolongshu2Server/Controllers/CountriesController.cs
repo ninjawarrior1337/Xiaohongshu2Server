@@ -45,21 +45,22 @@ namespace Xiaolongshu2Server.Controllers
         [HttpGet("GetPopulation/{id}")]
         public async Task<ActionResult<CountryPopulation>> GetCountryWithPopulation(int id)
         {
-            var country = await _context.Countries.FindAsync(id);
+            var country = await _context.Countries.Where(c => c.Id == id).Select(country => new CountryPopulation()
+            {
+                Id = country.Id,
+                Name = country.Name,
+                Iso2 = country.Iso2,
+                Iso3 = country.Iso3,
+                Population = country.Cities.Select(c => c.Population).Sum(),
+                CityCount = country.Cities.Count
+            }).SingleAsync();
 
             if (country == null)
             {
                 return NotFound();
             }
 
-            return new CountryPopulation()
-            {
-                Id = country.Id,
-                Name = country.Name,
-                Iso2 = country.Iso2,
-                Iso3 = country.Iso3,
-                Population = country.Cities.Select(c => c.Population).Aggregate(0, (acc, val) => acc+val)
-            };
+            return country;
         }
 
         // PUT: api/Countries/5
