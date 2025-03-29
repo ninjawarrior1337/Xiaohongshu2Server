@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Xiaolongshu2Model;
 
@@ -10,10 +11,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 builder.Services.AddDbContext<WorldcitiesSrcContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("local"));
 });
+
+builder.Services.AddIdentity<WorldCitiesUser, IdentityRole>().AddEntityFrameworkStores<WorldcitiesSrcContext>();
 
 var app = builder.Build();
 

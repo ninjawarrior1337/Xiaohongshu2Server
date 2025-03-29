@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Xiaolongshu2Model;
 
-public partial class WorldcitiesSrcContext : DbContext
+public partial class WorldcitiesSrcContext : IdentityDbContext<WorldCitiesUser>
 {
     public WorldcitiesSrcContext()
     {
@@ -20,11 +23,17 @@ public partial class WorldcitiesSrcContext : DbContext
     public virtual DbSet<Country> Countries { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("server=(localdb)\\mssqllocaldb;database=worldcities");
+    {
+        if(optionsBuilder.IsConfigured) { return; }
+        IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+        var cfg = builder.Build();
+        optionsBuilder.UseSqlServer(cfg.GetConnectionString("local"));
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<City>(entity =>
         {
             entity.HasOne(d => d.Country).WithMany(p => p.Cities)

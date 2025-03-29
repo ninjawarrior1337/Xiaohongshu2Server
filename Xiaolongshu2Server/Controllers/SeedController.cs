@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Xiaolongshu2Model;
@@ -15,7 +16,7 @@ namespace Xiaolongshu2Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SeedController(WorldcitiesSrcContext context, IHostEnvironment environment) : ControllerBase
+    public class SeedController(WorldcitiesSrcContext context, IHostEnvironment environment, UserManager<WorldCitiesUser> userManager) : ControllerBase
     {
         string _pathName = Path.Combine(environment.ContentRootPath, "Data", "worldcities.csv");
 
@@ -121,6 +122,28 @@ namespace Xiaolongshu2Server.Controllers
                 await context.SaveChangesAsync();
             }
             return new JsonResult(cityCount);
+        }
+
+        [HttpPost("Users")]
+        public async Task ImportUsersAsync()
+        {
+            var user = new WorldCitiesUser()
+            {
+                UserName = "user",
+                Email = "user@xiaohongshu.treelar.xyz",
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            var admin = new WorldCitiesUser()
+            {
+                UserName = "admin",
+                Email = "admin@xiaohongshu.treelar.xyz",
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            await userManager.CreateAsync(user, "Passw0rd!");
+            await userManager.CreateAsync(admin, "Passw0rd!");
+            await context.SaveChangesAsync();
         }
     }
 }
