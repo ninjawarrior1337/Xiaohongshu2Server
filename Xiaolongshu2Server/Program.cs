@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Xiaolongshu2Model;
+using Xiaolongshu2Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,31 @@ builder.Services.AddDbContext<WorldcitiesSrcContext>(options =>
 });
 
 builder.Services.AddIdentity<WorldCitiesUser, IdentityRole>().AddEntityFrameworkStores<WorldcitiesSrcContext>();
+
+builder.Services.AddScoped<JwtHandler>();
+
+builder.Services.AddAuthentication(opts =>
+{
+    opts.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opts.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(opts =>
+{
+    opts.TokenValidationParameters = new()
+    {
+        RequireAudience = true,
+        RequireExpirationTime = true,
+        ValidateAudience = true,
+        ValidateIssuer = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = builder.Configuration.GetSection("JwtSettings")["Issuer"],
+        ValidAudience = builder.Configuration.GetSection("JwtSettings")["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JwtSettings")["SecurityKey"] ??
+            throw new InvalidOperationException())
+        ),
+    };
+});
 
 var app = builder.Build();
 
